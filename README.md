@@ -281,3 +281,4 @@ erDiagram
 ## 🌐 Deployment Notes
 - **Backend & Database**: Ready for deployment on **Render** or **Railway**. Set `DATABASE_URL` to PostgreSQL and `NODE_ENV=production`.
 - **Frontend Client**: Ready for deployment on **Vercel** or **Netlify**. Set `VITE_API_URL` to the production backend URL.
+# group_expense_splitter
