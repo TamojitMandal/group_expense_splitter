@@ -65,7 +65,7 @@ async function getGroupFinancialData(groupId: string) {
 // GET /api/groups/:id/balances - Net balance per member in paise
 router.get('/balances', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const groupId = req.params.id;
+    const groupId = req.params.id as string;
     const { members, userMap, netMap } = await getGroupFinancialData(groupId);
 
     const balances = members.map((m) => {
@@ -88,7 +88,7 @@ router.get('/balances', async (req: Request, res: Response, next: NextFunction):
 // GET /api/groups/:id/settlements - Suggested minimal payment plan
 router.get('/settlements', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const groupId = req.params.id;
+    const groupId = req.params.id as string;
     const { userMap, netMap } = await getGroupFinancialData(groupId);
 
     const rawTransactions = calculateSettlements(netMap);
@@ -111,7 +111,7 @@ router.post(
   validate({ body: RecordPaymentSchema }),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const groupId = req.params.id;
+      const groupId = req.params.id as string;
       const { fromUserId, toUserId, amountPaise, note } = req.body;
 
       if (fromUserId === toUserId) {
@@ -191,7 +191,7 @@ router.post(
 // GET /api/groups/:id/payments - List recorded payments
 router.get('/payments', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const groupId = req.params.id;
+    const groupId = req.params.id as string;
 
     const payments = await prisma.payment.findMany({
       where: { groupId },

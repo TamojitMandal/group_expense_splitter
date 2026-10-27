@@ -141,9 +141,9 @@ router.get(
   requireGroupMember,
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const groupId = req.params.id;
+      const groupId = req.params.id as string;
 
-      const group = await prisma.group.findUnique({
+      const group = (await prisma.group.findUnique({
         where: { id: groupId },
         include: {
           members: {
@@ -159,7 +159,7 @@ router.get(
             orderBy: { joinedAt: 'asc' },
           },
         },
-      });
+      })) as any;
 
       if (!group) {
         throw new NotFoundError('Group not found');
@@ -173,7 +173,7 @@ router.get(
           createdById: group.createdById,
           createdAt: group.createdAt,
           myRole: req.groupMember!.role,
-          members: group.members.map((m) => ({
+          members: group.members.map((m: any) => ({
             id: m.id,
             userId: m.user.id,
             name: m.user.name,
@@ -196,7 +196,7 @@ router.post(
   requireGroupMember,
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const groupId = req.params.id;
+      const groupId = req.params.id as string;
       const { email } = req.body;
 
       // 1. Verify user exists with clear 404 message
@@ -224,7 +224,7 @@ router.post(
       }
 
       // 3. Add member and record activity in transaction
-      const newMember = await prisma.$transaction(async (tx) => {
+      const newMember = (await prisma.$transaction(async (tx) => {
         const member = await tx.groupMember.create({
           data: {
             groupId,
@@ -253,7 +253,7 @@ router.post(
         });
 
         return member;
-      });
+      })) as any;
 
       res.status(201).json({
         member: {

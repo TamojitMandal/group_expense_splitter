@@ -98,7 +98,7 @@ export async function requireGroupMember(req: Request, _res: Response, next: Nex
       throw new UnauthorizedError('Authentication required');
     }
 
-    const groupId = req.params.id || req.params.groupId;
+    const groupId = (req.params.id || req.params.groupId) as string;
     if (!groupId) {
       throw new NotFoundError('Group ID missing from request parameters');
     }

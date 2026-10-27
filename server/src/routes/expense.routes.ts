@@ -118,7 +118,7 @@ router.post(
   validate({ body: CreateExpenseSchema }),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const groupId = req.params.id;
+      const groupId = req.params.id as string;
       const {
         description,
         paidById,
@@ -219,7 +219,7 @@ router.post(
 // GET /api/groups/:id/expenses - List non-deleted expenses with splits
 router.get('/', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const groupId = req.params.id;
+    const groupId = req.params.id as string;
 
     const expenses = await prisma.expense.findMany({
       where: {
@@ -250,7 +250,8 @@ router.put(
   validate({ params: ExpenseIdParamSchema, body: CreateExpenseSchema }),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { id: groupId, expenseId } = req.params;
+      const groupId = req.params.id as string;
+      const expenseId = req.params.expenseId as string;
       const {
         description,
         paidById,
@@ -369,7 +370,8 @@ router.delete(
   validate({ params: ExpenseIdParamSchema }),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { id: groupId, expenseId } = req.params;
+      const groupId = req.params.id as string;
+      const expenseId = req.params.expenseId as string;
 
       const existingExpense = await prisma.expense.findFirst({
         where: { id: expenseId, groupId, deletedAt: null },
