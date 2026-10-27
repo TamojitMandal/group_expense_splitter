@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  passwordHash String
+  createdAt    DateTime      @default(now())
+
+  // Relations
+  memberships      GroupMember[]
+  createdGroups    Group[]        @relation("GroupCreator")
+  paidExpenses     Expense[]      @relation("ExpensePayer")
+  createdExpenses  Expense[]      @relation("ExpenseCreator")
+  splits           ExpenseSplit[]
+  sentPayments     Payment[]      @relation("PaymentSender")
+  receivedPayments Payment[]      @relation("PaymentReceiver")
+  activities       Activity[]
+
+  @@index([email])
+}
+
+model Group {
+  id          String        @id @default(uuid())
+  name        String
+  currency    String        @default("INR")
+  createdById String
+  createdAt   DateTime      @default(now())
+
+  // Relations
+  createdBy   User          @relation("GroupCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  members     GroupMember[]
+  expenses    Expense[]
+  payments    Payment[]
+  activities  Activity[]
+
+  @@index([createdById])
+}
+
+model GroupMember {
+  id       String   @id @default(uuid())
+  groupId  String
+  userId   String
+  role     String   @default("MEMBER") // "OWNER" | "MEMBER"
+  joinedAt DateTime @default(now())
+
+  // Relations
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+}
+
+model Expense {
+  id           String         @id @default(uuid())
+  groupId      String
+  description  String
+  amountPaise  Int            // Stored in group currency paise (integer)
+  currency     String         @default("INR")
+  originalAmountPaise Int?    // If multi-currency: original amount in original currency minor units
+  exchangeRate String?        // Optional fixed rate to group currency (stored as decimal string, e.g. "83.25", never float)
+  paidById     String
+  splitType    String         // "EQUAL" | "EXACT" | "PERCENT"
+  date         DateTime       @default(now())
+  createdById  String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?      // Soft delete
+
+  // Relations
+  group        Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  paidBy       User           @relation("ExpensePayer", fields: [paidById], references: [id], onDelete: Restrict)
+  createdBy    User           @relation("ExpenseCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  splits       ExpenseSplit[]
+
+  @@index([groupId])
+  @@index([paidById])
+  @@index([deletedAt])
+}
+
+model ExpenseSplit {
+  id          String   @id @default(uuid())
+  expenseId   String
+  userId      String
+  owedPaise   Int      // Final share in integer paise
+  basisPoints Int?     // For PERCENT splits: percent * 100 (e.g. 3333 for 33.33%)
+
+  // Relations
+  expense     Expense  @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, userId])
+  @@index([expenseId])
+  @@index([userId])
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  groupId     String
+  fromUserId  String
+  toUserId    String
+  amountPaise Int      // Stored as integer paise
+  createdAt   DateTime @default(now())
+  note        String?
+
+  // Relations
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  fromUser    User     @relation("PaymentSender", fields: [fromUserId], references: [id], onDelete: Restrict)
+  toUser      User     @relation("PaymentReceiver", fields: [toUserId], references: [id], onDelete: Restrict)
+
+  @@index([groupId])
+  @@index([fromUserId])
+  @@index([toUserId])
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  groupId   String
+  actorId   String
+  type      String   // GROUP_CREATED | MEMBER_ADDED | EXPENSE_ADDED | EXPENSE_EDITED | EXPENSE_DELETED | PAYMENT_RECORDED
+  message   String
+  metadata  String?  // JSON string
+  createdAt DateTime @default(now())
+
+  // Relations
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  actor     User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([createdAt])
+}

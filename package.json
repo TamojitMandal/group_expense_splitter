@@ -1,0 +1,20 @@
+{
+  "name": "group-expense-splitter",
+  "version": "1.0.0",
+  "description": "Production-quality Group Expense Splitter (Splitwise-style) web app",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix server run build && npm --prefix client run build",
+    "test": "npm --prefix server test",
+    "seed": "npm --prefix server run seed",
+    "db:migrate": "npm --prefix server run db:migrate",
+    "db:push": "npm --prefix server run db:push",
+    "db:studio": "npm --prefix server run db:studio"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
